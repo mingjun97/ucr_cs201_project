@@ -2,12 +2,12 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
 import soot.Body;
 import soot.Unit;
+import soot.Value;
 import soot.ValueBox;
 import soot.jimple.internal.ImmediateBox;
 import soot.BodyTransformer;
@@ -40,7 +40,7 @@ public class Main {
 
 	private static void staticAnalysis(){
 		configure(".:/root/CS201Fall19/Analysis"); //Change this path to your Analysis folder path in your project directory
-		SootClass sootClass = Scene.v().loadClassAndSupport("Test2");
+		SootClass sootClass = Scene.v().loadClassAndSupport("Test3");
 	    sootClass.setApplicationClass();
 	    //Static Analysis code
 		List<SootMethod> methods = sootClass.getMethods();
@@ -77,7 +77,8 @@ public class Main {
 		}
 		System.out.println();
 		
-		System.out.println("------Static Analysis 2-------\n-----------------------------");
+		System.out.println("------Static Analysis 2-------\n------------------------------");
+		ArrayList<Unit> interested = new ArrayList<Unit>();
 		for (int i = 0; i < sootClass.getMethodCount(); i++) {
 			SootMethod method = methods.get(i);
 			Body body = method.retrieveActiveBody();
@@ -85,29 +86,52 @@ public class Main {
 			System.out.println("Method: " + method.toString());
 
 			List<ArrayList<Integer>> loops = getLoops(blockgraph);
-			for (ArrayList<Integer> arrayList : loops) {
-				for (Integer idxBB : arrayList) {
-					Block block_in_loop = blockgraph.getBlocks().get(idxBB);
-					for (Block pred : block_in_loop.getPreds()){
-						for (Unit unit : pred){
-							for (ValueBox vb : unit){
-								
-							}
-						}
-					}
-					for (Unit unit : block_in_loop) {
-						List<ValueBox> uses = unit.getUseBoxes();
-						for (ValueBox vb : uses) {
-							if (vb instanceof ImmediateBox) {
-								System.out.println(vb.getValue().toString());
+			for (ArrayList<Integer> loop : loops) {
+				ArrayList<Value> INs = getINsOfLoop(blockgraph, loop);
+				// System.out.println(String.format("INs: %s", INs.toString()));
+				for (Integer idxBB : loop) {
+					for (Unit unit : blockgraph.getBlocks().get(idxBB)) {
+						// System.out.println(String.format("Unit: %s", unit.toString()));
+						for (ValueBox vb : unit.getUseBoxes()) {
+							// System.out.println(String.format("vb: %s %x", vb.getValue().toString(), vb.getValue().equivHashCode()));
+							if (INs.contains(vb.getValue())){
+								interested.add(unit);
+								System.out.println(unit.toString());
 							}
 						}
 					}
 				}
 			}
+			System.out.println();
 		}
 		System.out.println();
 		
+	}
+	// get INs of loop
+	private static ArrayList<Value> getINsOfLoop(BlockGraph bg ,ArrayList<Integer> loop) {
+		ArrayList<Value> INs = new ArrayList<Value>();
+		Boolean[] visited = new Boolean[bg.getBlocks().size()];
+		Arrays.fill(visited, false);
+		ArrayList<Block> worklist = new ArrayList<Block>();
+		for (int bb: loop) worklist.add(bg.getBlocks().get(bb));
+		while (worklist.size() > 0) {
+			for (Block pred : worklist.remove(0).getPreds()){
+				if (! loop.contains(pred.getIndexInMethod()) && !visited[pred.getIndexInMethod()]){ // this pred is not in loop
+					// System.out.println("Working on pred: " + String.valueOf(pred.getIndexInMethod()));
+
+					worklist.add(pred);
+					visited[pred.getIndexInMethod()] = true;
+					for (Unit unit : pred){
+						// System.out.println(unit.toString());
+						for (ValueBox vb: unit.getDefBoxes()){
+							// System.out.println(vb.getValue().toString());
+							INs.add(vb.getValue());
+						}
+					}
+				}
+			}
+		}
+		return INs;
 	}
 
 	private static Boolean reachable(BlockGraph bg, int from, int to, int avoid, int level){
@@ -214,7 +238,8 @@ public class Main {
 		PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter", new BodyTransformer() {
 
 		protected void internalTransform(Body arg0, String arg1, Map arg2) {
-			//Dynamic Analysis (Instrumentation) code				
+			//Dynamic Analysis (Instrumentation) code
+
 		}			
 	   }));
 	}
