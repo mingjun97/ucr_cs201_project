@@ -23,9 +23,7 @@ import soot.toolkits.graph.ClassicCompleteBlockGraph;
 
 
 public class Main {
-	
 	public static void main(String[] args) {
-		
 		//Static Analysis (Retrieve Flow Graph)
 		staticAnalysis();
 
@@ -78,12 +76,18 @@ public class Main {
 		System.out.println();
 		
 		System.out.println("------Static Analysis 2-------\n------------------------------");
+		getTarget(sootClass, methods, true).toString();
+		System.out.println();
+		
+	}
+
+	private static ArrayList<Unit> getTarget(SootClass sootClass, List<SootMethod> methods, Boolean verbose){
 		ArrayList<Unit> interested = new ArrayList<Unit>();
 		for (int i = 0; i < sootClass.getMethodCount(); i++) {
 			SootMethod method = methods.get(i);
 			Body body = method.retrieveActiveBody();
 			BlockGraph blockgraph = new ClassicCompleteBlockGraph(body);
-			System.out.println("Method: " + method.toString());
+			if (verbose) System.out.println("Method: " + method.toString());
 
 			List<ArrayList<Integer>> loops = getLoops(blockgraph);
 			for (ArrayList<Integer> loop : loops) {
@@ -96,16 +100,15 @@ public class Main {
 							// System.out.println(String.format("vb: %s %x", vb.getValue().toString(), vb.getValue().equivHashCode()));
 							if (INs.contains(vb.getValue())){
 								interested.add(unit);
-								System.out.println(unit.toString());
+								if (verbose) System.out.println(unit.toString());
 							}
 						}
 					}
 				}
 			}
-			System.out.println();
+			if (verbose) System.out.println();
 		}
-		System.out.println();
-		
+		return interested;
 	}
 	// get INs of loop
 	private static ArrayList<Value> getINsOfLoop(BlockGraph bg ,ArrayList<Integer> loop) {
