@@ -9,7 +9,6 @@ import soot.Body;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
-import soot.jimple.internal.ImmediateBox;
 import soot.BodyTransformer;
 import soot.toolkits.graph.Block;
 import soot.PackManager;
@@ -28,7 +27,7 @@ public class Main {
 		staticAnalysis();
 
 		//Dynamic Analysis (Instrumentation) 
-		// dynamicAnalysis();
+		dynamicAnalysis();
  
 		soot.Main.main(args);
 		
@@ -92,12 +91,9 @@ public class Main {
 			List<ArrayList<Integer>> loops = getLoops(blockgraph);
 			for (ArrayList<Integer> loop : loops) {
 				ArrayList<Value> INs = getINsOfLoop(blockgraph, loop);
-				// System.out.println(String.format("INs: %s", INs.toString()));
 				for (Integer idxBB : loop) {
 					for (Unit unit : blockgraph.getBlocks().get(idxBB)) {
-						// System.out.println(String.format("Unit: %s", unit.toString()));
 						for (ValueBox vb : unit.getUseBoxes()) {
-							// System.out.println(String.format("vb: %s %x", vb.getValue().toString(), vb.getValue().equivHashCode()));
 							if (INs.contains(vb.getValue())){
 								interested.add(unit);
 								if (verbose) System.out.println(unit.toString());
