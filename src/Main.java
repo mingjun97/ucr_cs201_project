@@ -1,4 +1,8 @@
 import java.util.Map;
+
+import heros.solver.Pair;
+import polyglot.ast.Assign;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,11 +13,21 @@ import soot.Body;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
+import soot.jimple.AssignStmt;
+import soot.jimple.Jimple;
+import soot.jimple.LongConstant;
+import soot.jimple.ReturnVoidStmt;
+import soot.jimple.StringConstant;
 import soot.BodyTransformer;
+import soot.Local;
+import soot.LongType;
+import soot.Modifier;
 import soot.toolkits.graph.Block;
 import soot.PackManager;
+import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.Transform;
 import soot.SootMethod;
 import soot.options.Options;
@@ -37,7 +51,7 @@ public class Main {
 
 	private static void staticAnalysis(){
 		configure(".:/root/CS201Fall19/Analysis"); //Change this path to your Analysis folder path in your project directory
-		SootClass sootClass = Scene.v().loadClassAndSupport("Test3");
+		SootClass sootClass = Scene.v().loadClassAndSupport("Test1");
 	    sootClass.setApplicationClass();
 	    //Static Analysis code
 		List<SootMethod> methods = sootClass.getMethods();
@@ -75,15 +89,14 @@ public class Main {
 		System.out.println();
 		
 		System.out.println("------Static Analysis 2-------\n------------------------------");
-		getTarget(sootClass, methods, true).toString();
+		getTarget(methods, true).toString();
 		System.out.println();
 		
 	}
 
-	private static ArrayList<Unit> getTarget(SootClass sootClass, List<SootMethod> methods, Boolean verbose){
+	private static ArrayList<Unit> getTarget( List<SootMethod> methods, Boolean verbose){
 		ArrayList<Unit> interested = new ArrayList<Unit>();
-		for (int i = 0; i < sootClass.getMethodCount(); i++) {
-			SootMethod method = methods.get(i);
+		for (SootMethod method: methods) {
 			Body body = method.retrieveActiveBody();
 			BlockGraph blockgraph = new ClassicCompleteBlockGraph(body);
 			if (verbose) System.out.println("Method: " + method.toString());
@@ -232,13 +245,104 @@ public class Main {
 		System.out.println();
 		return loops;
 	}
+	static class Pair<T1, T2> {
+		public T1 p1;
+		public T2 p2;
+		Pair(T1 p1, T2 p2){
+			this.p1 = p1;
+			this.p2 = p2;
+		}
+		Pair(){}
+	}
 
 	private static void dynamicAnalysis(){
 		PackManager.v().getPack("jtp").add(new Transform("jtp.myInstrumenter", new BodyTransformer() {
 
+
+		protected ArrayList<Pair<String,SootField>> doInstrumentation(Body arg0, String arg1, Map arg2, ArrayList<Unit> target){
+			SootClass sootClass = arg0.getMethod().getDeclaringClass();
+			ArrayList<Pair<String,SootField>> fields = new ArrayList<Pair<String,SootField>>();
+			List<Block> blocks = new ClassicCompleteBlockGraph(arg0).getBlocks();
+			Local ref_counter = Jimple.v().newLocal("cs201_instrument_local", LongType.v());
+			arg0.getLocals().add(ref_counter);
+			Boolean added_my_name = false;
+			for (Block block: blocks){ // for each block in this method
+				ArrayList<Pair<Unit, ArrayList<AssignStmt>>> work_orders = new ArrayList<Main.Pair<Unit,ArrayList<AssignStmt>>>();
+				for (Unit unit: block){ // for each unit in this block
+					if (target.contains(unit)){ // if this unit is the interested one
+						// create a variable coutner for it
+						// static long method_name_BB0_hash;
+						SootField counter_for_unit = new SootField(String.format("%s_BB%d_%x", arg0.getMethod().getName(), block.getIndexInMethod(), unit.hashCode()), LongType.v(), Modifier.STATIC);
+						sootClass.addField(counter_for_unit);
+						// DEBUG: comment out me
+						// System.out.println(String.format("Match \'%s\' create field %s", unit.toString(), String.format("%s_BB%d_%x", arg0.getMethod().getName(), block.getIndexInMethod(), unit.hashCode())));
+						if (added_my_name) fields.add(new Pair<String, SootField>(unit.toString(),counter_for_unit));
+						else {
+							fields.add(new Pair<String, SootField>(arg0.getMethod().toString() + "\n" + unit.toString(),counter_for_unit));
+							added_my_name = true;
+						}
+						// cs201_instrument_local = method_name_BB0_hash;
+						AssignStmt assignLocalToRef = Jimple.v().newAssignStmt(ref_counter, Jimple.v().newStaticFieldRef(counter_for_unit.makeRef()));
+						// cs201_instrument_local += 1;
+						AssignStmt assignIncreamen = Jimple.v().newAssignStmt(ref_counter, Jimple.v().newAddExpr(ref_counter, LongConstant.v(1)));
+						// method_name_BB0_hash = cs201_instrument_local;
+						AssignStmt assignBack = Jimple.v().newAssignStmt(Jimple.v().newStaticFieldRef(counter_for_unit.makeRef()), ref_counter);
+						Pair<Unit, ArrayList<AssignStmt>> order = new Pair<Unit,ArrayList<AssignStmt>>();
+						order.p1 = unit;
+						order.p2 = new ArrayList<AssignStmt>();
+						order.p2.add(assignLocalToRef);
+						order.p2.add(assignIncreamen);
+						order.p2.add(assignBack);
+						work_orders.add(order);
+					}
+				}
+				for (Pair<Unit, ArrayList<AssignStmt>> order: work_orders){
+					for (AssignStmt stmt: order.p2){
+						block.insertBefore(stmt, order.p1);
+					}
+				}
+			}
+
+			return fields;
+		}
 		protected void internalTransform(Body arg0, String arg1, Map arg2) {
 			//Dynamic Analysis (Instrumentation) code
-
+				ArrayList<Pair<String,SootField>> counters = new ArrayList<Pair<String,SootField>>();
+				if (arg0.getMethod().getSubSignature().equals("void main(java.lang.String[])") ) {
+					// for each method in this class
+					List<SootMethod> methods = arg0.getMethod().getDeclaringClass().getMethods();
+					ArrayList<Unit> target = getTarget(methods, false);
+					for (SootMethod method : methods) {
+						if (method.getSubSignature().equals("void main(java.lang.String[])"))
+							continue; // skip main function
+						if (method.getName().equalsIgnoreCase("<init>"))
+							continue;
+						counters.addAll(this.doInstrumentation(method.retrieveActiveBody(), arg1, arg2, target));
+					}
+					// dealing with main function
+					SootClass sootClass = arg0.getMethod().getDeclaringClass();
+					List<Block> blocks = new ClassicCompleteBlockGraph(arg0).getBlocks();
+					Local ref_counter = Jimple.v().newLocal("cs201_instrument_local", LongType.v());
+					arg0.getLocals().add(ref_counter);
+					for (Block block: blocks){
+						Unit unit_return_stmt = block.getTail();
+						if (unit_return_stmt instanceof ReturnVoidStmt){
+							Local tmpRef = Jimple.v().newLocal("streamIO_cs201", RefType.v("java.io.PrintStream"));
+							arg0.getLocals().add(tmpRef);
+							// streamIO_cs201 = java.lang.System.out;
+							// block.insertBefore(Jimple.v().newAssignStmt(tmpRef, Jimple.v().newStaticFieldRef(Scene.v().getField("<java.lang.System: java.io.PrintStream out>").makeRef())), unit_return_stmt);
+							SootMethod printStringCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void print(java.lang.String)");
+							SootMethod printIntCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void println(int)");
+							for (Pair<String, SootField> counter: counters){
+								// System.out.println("we do did it!");
+								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printStringCall.makeRef(), StringConstant.v("Are you kidding me?"))), unit_return_stmt);
+								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printStringCall.makeRef(), StringConstant.v(counter.p1))), unit_return_stmt);
+								block.insertBefore(Jimple.v().newAssignStmt(ref_counter, Jimple.v().newStaticFieldRef(counter.p2.makeRef())), unit_return_stmt);
+								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printIntCall.makeRef(), ref_counter)), unit_return_stmt);
+							}
+						}
+					}
+				}	// not interested funcitons
 		}			
 	   }));
 	}
