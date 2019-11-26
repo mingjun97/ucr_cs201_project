@@ -330,12 +330,11 @@ public class Main {
 							Local tmpRef = Jimple.v().newLocal("streamIO_cs201", RefType.v("java.io.PrintStream"));
 							arg0.getLocals().add(tmpRef);
 							// streamIO_cs201 = java.lang.System.out;
-							// block.insertBefore(Jimple.v().newAssignStmt(tmpRef, Jimple.v().newStaticFieldRef(Scene.v().getField("<java.lang.System: java.io.PrintStream out>").makeRef())), unit_return_stmt);
+							block.insertBefore(Jimple.v().newAssignStmt(tmpRef, Jimple.v().newStaticFieldRef(Scene.v().getField("<java.lang.System: java.io.PrintStream out>").makeRef())), unit_return_stmt);
+				        
 							SootMethod printStringCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void print(java.lang.String)");
 							SootMethod printIntCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void println(int)");
 							for (Pair<String, SootField> counter: counters){
-								// System.out.println("we do did it!");
-								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printStringCall.makeRef(), StringConstant.v("Are you kidding me?"))), unit_return_stmt);
 								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printStringCall.makeRef(), StringConstant.v(counter.p1))), unit_return_stmt);
 								block.insertBefore(Jimple.v().newAssignStmt(ref_counter, Jimple.v().newStaticFieldRef(counter.p2.makeRef())), unit_return_stmt);
 								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printIntCall.makeRef(), ref_counter)), unit_return_stmt);
