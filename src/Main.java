@@ -41,9 +41,6 @@ public class Main {
 		staticAnalysis();
 
 		//Dynamic Analysis (Instrumentation) 
-		System.out.println("-----------Dynamic Analysis-----------");
-
-
 		dynamicAnalysis();
  
 		soot.Main.main(args);
