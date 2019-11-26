@@ -5,6 +5,8 @@ public class Test4 extends java.lang.Object
     {
         java.lang.String[] args;
         int x, temp$1;
+        java.io.PrintStream tmpRef;
+        long cs201_instrument_local;
 
         args := @parameter0: java.lang.String[];
 
@@ -20,6 +22,8 @@ public class Test4 extends java.lang.Object
         goto label2;
 
      label2:
+        tmpRef = <java.lang.System: java.io.PrintStream out>;
+
         return;
     }
 

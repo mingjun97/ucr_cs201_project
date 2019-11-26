@@ -41,6 +41,9 @@ public class Main {
 		staticAnalysis();
 
 		//Dynamic Analysis (Instrumentation) 
+		System.out.println("-----------Dynamic Analysis-----------");
+
+
 		dynamicAnalysis();
  
 		soot.Main.main(args);
@@ -320,24 +323,27 @@ public class Main {
 						counters.addAll(this.doInstrumentation(method.retrieveActiveBody(), arg1, arg2, target));
 					}
 					// dealing with main function
-					SootClass sootClass = arg0.getMethod().getDeclaringClass();
-					List<Block> blocks = new ClassicCompleteBlockGraph(arg0).getBlocks();
-					Local ref_counter = Jimple.v().newLocal("cs201_instrument_local", LongType.v());
-					arg0.getLocals().add(ref_counter);
-					for (Block block: blocks){
-						Unit unit_return_stmt = block.getTail();
-						if (unit_return_stmt instanceof ReturnVoidStmt){
-							Local tmpRef = Jimple.v().newLocal("streamIO_cs201", RefType.v("java.io.PrintStream"));
-							arg0.getLocals().add(tmpRef);
-							// streamIO_cs201 = java.lang.System.out;
-							block.insertBefore(Jimple.v().newAssignStmt(tmpRef, Jimple.v().newStaticFieldRef(Scene.v().getField("<java.lang.System: java.io.PrintStream out>").makeRef())), unit_return_stmt);
-				        
-							SootMethod printStringCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void print(java.lang.String)");
-							SootMethod printIntCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void println(int)");
-							for (Pair<String, SootField> counter: counters){
-								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printStringCall.makeRef(), StringConstant.v(counter.p1))), unit_return_stmt);
-								block.insertBefore(Jimple.v().newAssignStmt(ref_counter, Jimple.v().newStaticFieldRef(counter.p2.makeRef())), unit_return_stmt);
-								block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printIntCall.makeRef(), ref_counter)), unit_return_stmt);
+					if (arg0.getMethod().getSubSignature().equals("void main(java.lang.String[])")){
+						SootClass sootClass = arg0.getMethod().getDeclaringClass();
+						List<Block> blocks = new ClassicCompleteBlockGraph(arg0).getBlocks();
+	
+						Local tmpRef = Jimple.v().newLocal("tmpRef", RefType.v("java.io.PrintStream"));
+						arg0.getLocals().add(tmpRef);
+						SootMethod printIntCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void println(int)");
+						SootMethod printStringCall = Scene.v().getSootClass("java.io.PrintStream").getMethod("void print(java.lang.String)");
+						for (Block block: blocks){
+							Unit unit_return_stmt = block.getTail();
+							if (unit_return_stmt instanceof ReturnVoidStmt){ // return unit of block of main
+								Local ref_counter = Jimple.v().newLocal("cs201_instrument_local", LongType.v());
+								arg0.getLocals().add(ref_counter);
+								// java.io.PrintStream streamIO_cs201 = <java.lang.System: java.io.PrintStream out>;
+								block.insertBefore(Jimple.v().newAssignStmt(tmpRef, Jimple.v().newStaticFieldRef(Scene.v().getField("<java.lang.System: java.io.PrintStream out>").makeRef())), unit_return_stmt);
+							
+								for (Pair<String, SootField> counter: counters){
+									block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printStringCall.makeRef(), StringConstant.v(counter.p1))), unit_return_stmt);
+									block.insertBefore(Jimple.v().newAssignStmt(ref_counter, Jimple.v().newStaticFieldRef(sootClass.getFieldByName(counter.p2.getName()).makeRef())), unit_return_stmt);
+									block.insertBefore(Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(tmpRef, printIntCall.makeRef(), ref_counter)), unit_return_stmt);
+								}
 							}
 						}
 					}

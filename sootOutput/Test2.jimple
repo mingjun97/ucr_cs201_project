@@ -1,13 +1,52 @@
 public class Test2 extends java.lang.Object
 {
+    static long func1_BB1_842b078;
+    static long func1_BB3_249081b8;
+    static long func1_BB4_662671f6;
+    static long func1_BB6_4e7d02da;
+    static long func1_BB7_11f04e54;
 
     public static void main(java.lang.String[])
     {
         java.lang.String[] args;
+        java.io.PrintStream tmpRef;
+        long cs201_instrument_local;
 
         args := @parameter0: java.lang.String[];
 
         staticinvoke <Test2: void func1(int)>(20);
+
+        tmpRef = <java.lang.System: java.io.PrintStream out>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("<Test2: void func1(int)>\nif y > 0 goto nop");
+
+        cs201_instrument_local = <Test2: long func1_BB1_842b078>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("z = x");
+
+        cs201_instrument_local = <Test2: long func1_BB3_249081b8>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("if z > 0 goto nop");
+
+        cs201_instrument_local = <Test2: long func1_BB4_662671f6>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("temp$0 = z");
+
+        cs201_instrument_local = <Test2: long func1_BB6_4e7d02da>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("temp$2 = y");
+
+        cs201_instrument_local = <Test2: long func1_BB7_11f04e54>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
 
         return;
     }
@@ -15,25 +54,50 @@ public class Test2 extends java.lang.Object
     public static void func1(int)
     {
         int x, y, z, temp$1, temp$3;
+        long cs201_instrument_local;
 
         x := @parameter0: int;
 
         y = x;
 
      label1:
+        cs201_instrument_local = <Test2: long func1_BB1_842b078>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test2: long func1_BB1_842b078> = cs201_instrument_local;
+
         if y > 0 goto label2;
 
         goto label6;
 
      label2:
+        cs201_instrument_local = <Test2: long func1_BB3_249081b8>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test2: long func1_BB3_249081b8> = cs201_instrument_local;
+
         z = x;
 
      label3:
+        cs201_instrument_local = <Test2: long func1_BB4_662671f6>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test2: long func1_BB4_662671f6> = cs201_instrument_local;
+
         if z > 0 goto label4;
 
         goto label5;
 
      label4:
+        cs201_instrument_local = <Test2: long func1_BB6_4e7d02da>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test2: long func1_BB6_4e7d02da> = cs201_instrument_local;
+
         temp$1 = z + -1;
 
         z = temp$1;
@@ -41,6 +105,12 @@ public class Test2 extends java.lang.Object
         goto label3;
 
      label5:
+        cs201_instrument_local = <Test2: long func1_BB7_11f04e54>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test2: long func1_BB7_11f04e54> = cs201_instrument_local;
+
         temp$3 = y + -1;
 
         y = temp$3;

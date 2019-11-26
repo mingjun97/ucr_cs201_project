@@ -1,9 +1,13 @@
 public class Test1 extends java.lang.Object
 {
+    static long func1_BB3_799fb45e;
+    static long func1_BB5_6ffc6ea7;
 
     public static void main(java.lang.String[])
     {
         java.lang.String[] args;
+        java.io.PrintStream tmpRef;
+        long cs201_instrument_local;
 
         args := @parameter0: java.lang.String[];
 
@@ -11,12 +15,27 @@ public class Test1 extends java.lang.Object
 
         staticinvoke <Test1: void func1(int)>(95);
 
+        tmpRef = <java.lang.System: java.io.PrintStream out>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("<Test1: void func1(int)>\ntemp$0 = x % 4");
+
+        cs201_instrument_local = <Test1: long func1_BB3_799fb45e>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void print(java.lang.String)>("temp$1 = x / 4");
+
+        cs201_instrument_local = <Test1: long func1_BB5_6ffc6ea7>;
+
+        virtualinvoke tmpRef.<java.io.PrintStream: void println(int)>(cs201_instrument_local);
+
         return;
     }
 
     public static void func1(int)
     {
         int x, temp$0, temp$1;
+        long cs201_instrument_local;
 
         x := @parameter0: int;
 
@@ -25,6 +44,12 @@ public class Test1 extends java.lang.Object
         goto label3;
 
      label1:
+        cs201_instrument_local = <Test1: long func1_BB3_799fb45e>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test1: long func1_BB3_799fb45e> = cs201_instrument_local;
+
         temp$0 = x % 4;
 
         if temp$0 != 0 goto label2;
@@ -32,6 +57,12 @@ public class Test1 extends java.lang.Object
         goto label3;
 
      label2:
+        cs201_instrument_local = <Test1: long func1_BB5_6ffc6ea7>;
+
+        cs201_instrument_local = cs201_instrument_local + 1L;
+
+        <Test1: long func1_BB5_6ffc6ea7> = cs201_instrument_local;
+
         temp$1 = x / 4;
 
         x = temp$1;
