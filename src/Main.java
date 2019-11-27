@@ -1,8 +1,5 @@
 import java.util.Map;
 
-import heros.solver.Pair;
-import polyglot.ast.Assign;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +48,7 @@ public class Main {
 
 	private static void staticAnalysis(){
 		configure(".:/root/CS201Fall19/Analysis"); //Change this path to your Analysis folder path in your project directory
-		SootClass sootClass = Scene.v().loadClassAndSupport("Test1");
+		SootClass sootClass = Scene.v().loadClassAndSupport("Test3");
 	    sootClass.setApplicationClass();
 	    //Static Analysis code
 		List<SootMethod> methods = sootClass.getMethods();
@@ -105,7 +102,9 @@ public class Main {
 			for (ArrayList<Integer> loop : loops) {
 				ArrayList<Value> INs = getINsOfLoop(blockgraph, loop);
 				for (Integer idxBB : loop) {
-					for (Unit unit : blockgraph.getBlocks().get(idxBB)) {
+					Iterator<Unit> target_block = blockgraph.getBlocks().get(idxBB).iterator();
+					while (target_block.hasNext()) {
+						Unit unit = target_block.next();
 						for (ValueBox vb : unit.getUseBoxes()) {
 							if (INs.contains(vb.getValue())){
 								interested.add(unit);
@@ -133,7 +132,9 @@ public class Main {
 
 					worklist.add(pred);
 					visited[pred.getIndexInMethod()] = true;
-					for (Unit unit : pred){
+					Iterator<Unit> pred_iter = pred.iterator();
+					while (pred_iter.hasNext()) {
+						Unit unit = pred_iter.next();
 						// System.out.println(unit.toString());
 						for (ValueBox vb: unit.getDefBoxes()){
 							// System.out.println(vb.getValue().toString());
@@ -268,7 +269,9 @@ public class Main {
 			Boolean added_my_name = false;
 			for (Block block: blocks){ // for each block in this method
 				ArrayList<Pair<Unit, ArrayList<AssignStmt>>> work_orders = new ArrayList<Main.Pair<Unit,ArrayList<AssignStmt>>>();
-				for (Unit unit: block){ // for each unit in this block
+				Iterator<Unit> block_iter = block.iterator();
+				while (block_iter.hasNext()){ // for each unit in this block
+					Unit unit = block_iter.next();
 					if (target.contains(unit)){ // if this unit is the interested one
 						// create a variable coutner for it
 						// static long method_name_BB0_hash;
@@ -276,9 +279,9 @@ public class Main {
 						sootClass.addField(counter_for_unit);
 						// DEBUG: comment out me
 						// System.out.println(String.format("Match \'%s\' create field %s", unit.toString(), String.format("%s_BB%d_%x", arg0.getMethod().getName(), block.getIndexInMethod(), unit.hashCode())));
-						if (added_my_name) fields.add(new Pair<String, SootField>(unit.toString(),counter_for_unit));
+						if (added_my_name) fields.add(new Pair<String, SootField>(unit.toString() + ": ",counter_for_unit));
 						else {
-							fields.add(new Pair<String, SootField>(arg0.getMethod().toString() + "\n" + unit.toString(),counter_for_unit));
+							fields.add(new Pair<String, SootField>(arg0.getMethod().toString() + "\n" + unit.toString() + ": ", counter_for_unit));
 							added_my_name = true;
 						}
 						// cs201_instrument_local = method_name_BB0_hash;
